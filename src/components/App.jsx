@@ -25,6 +25,9 @@ export const App = () => {
   };
 
   useEffect(() => {
+    if (searchWord === '') {
+      return;
+    }
     const getData = async () => {
       try {
         setLoadMoreVisible(false);
@@ -45,11 +48,12 @@ export const App = () => {
             tags,
           };
         });
+
         if (page === 1) {
           myGallery.maxPages = Math.ceil(totalHits / 12);
           setImages([...images]);
         } else {
-          setImages(prevState => [...prevState.images, ...images]);
+          setImages(prev => [...prev, ...images]);
         }
         setLoadMoreVisible(myGallery.ShowLoadMore());
         return true;
