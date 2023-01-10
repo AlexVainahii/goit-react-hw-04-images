@@ -1,4 +1,3 @@
-import { Component } from 'react';
 import { Loader } from './Loader/Loader';
 import { Searchbar } from './Searchbar/Searchbar';
 import { PixabayApi } from '../Api';
