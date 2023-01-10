@@ -4,91 +4,72 @@ import { Searchbar } from './Searchbar/Searchbar';
 import { PixabayApi } from '../Api';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
+import { useState } from 'react';
+import { useEffect } from 'react';
 const myGallery = new PixabayApi();
-export class App extends Component {
-  state = {
-    searchWord: '',
-    images: null,
-    isLoading: false,
-    loadMoreVisible: false,
-    error: null,
-    page: 1,
+export const App = () => {
+  const [searchWord, setSearchWord] = useState('');
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadMoreVisible, setLoadMoreVisible] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+
+  const searchImages = searchW => {
+    setSearchWord(searchW);
   };
-  searchImages = searchW => {
-    this.setState({ searchWord: searchW });
+
+  const loadMore = () => {
+    setPage(myGallery.incPage());
+    setLoadMoreVisible(myGallery.ShowLoadMore());
   };
-  getData = async noPush => {
-    try {
-      this.setState({
-        loadMoreVisible: false,
-        isLoading: true,
-        erorr: null,
-      });
-      if (noPush) {
-        this.setState({
-          images: null,
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        setLoadMoreVisible(false);
+        setIsLoading(true);
+        setError(null);
+
+        if (page === 1) {
+          setImages(null);
+          myGallery.search = searchWord;
+        }
+        const { hits, totalHits } = (await myGallery.getPhotos()).data;
+        const images = hits.map(image => {
+          const { id, webformatURL, largeImageURL, tags } = image;
+          return {
+            id,
+            webformatURL,
+            largeImageURL,
+            tags,
+          };
         });
-        myGallery.search = this.state.searchWord;
+        if (page === 1) {
+          myGallery.maxPages = Math.ceil(totalHits / 12);
+          setImages([...images]);
+        } else {
+          setImages(prevState => [...prevState.images, ...images]);
+        }
+        setLoadMoreVisible(myGallery.ShowLoadMore());
+        return true;
+      } catch {
+        setError('No pictures were found for this search');
+        return false;
+      } finally {
+        setIsLoading(false);
       }
-      const { hits, totalHits } = (await myGallery.getPhotos()).data;
-      const images = hits.map(image => {
-        const { id, webformatURL, largeImageURL, tags } = image;
-        return {
-          id,
-          webformatURL,
-          largeImageURL,
-          tags,
-        };
-      });
-      if (noPush) {
-        myGallery.maxPages = Math.ceil(totalHits / 12);
-        this.setState({
-          images: images,
-        });
-      } else {
-        this.setState(prevState => ({
-          images: [...prevState.images, ...images],
-        }));
-      }
-      this.setState({
-        loadMoreVisible: myGallery.ShowLoadMore(),
-      });
-      return true;
-    } catch {
-      this.setState({ error: 'No pictures were found for this search' });
-      return false;
-    } finally {
-      this.setState({ isLoading: false });
-    }
-  };
+    };
 
-  loadMore = () => {
-    this.setState({
-      page: myGallery.incPage(),
-      loadMoreVisible: myGallery.ShowLoadMore(),
-    });
-  };
+    getData();
+  }, [page, searchWord]);
 
-  componentDidUpdate(_, prevState) {
-    if (prevState.page !== this.state.page && this.state.page !== 1) {
-      this.getData(false);
-    }
-    if (prevState.searchWord !== this.state.searchWord) {
-      this.getData(true);
-    }
-  }
-
-  render() {
-    const { searchImages, loadMore } = this;
-    const { isLoading, images, loadMoreVisible } = this.state;
-
-    return (
-      <div>
-        <Searchbar onSubmit={searchImages} />
-        {images && <ImageGallery images={images} />}
-        <Loader isLoading={isLoading} />
-        {loadMoreVisible && <Button onClick={loadMore} />}
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <Searchbar onSubmit={searchImages} />
+      {images && <ImageGallery images={images} />}
+      <Loader isLoading={isLoading} />
+      {loadMoreVisible && <Button onClick={loadMore} />}
+    </div>
+  );
+};
