@@ -3,8 +3,7 @@ import { Searchbar } from './Searchbar/Searchbar';
 import { PixabayApi } from '../Api';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 const myGallery = new PixabayApi();
 export const App = () => {
   const [searchWord, setSearchWord] = useState('');
