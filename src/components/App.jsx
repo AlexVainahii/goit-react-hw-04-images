@@ -14,7 +14,15 @@ export const App = () => {
   const [page, setPage] = useState(1);
 
   const searchImages = searchW => {
-    setSearchWord(searchW);
+    if (searchW === '') {
+      setImages([]);
+      setError('Please enter to search');
+      setLoadMoreVisible(false);
+    }
+    if (searchW !== searchWord) {
+      setSearchWord(searchW);
+      setPage(1);
+    }
   };
 
   const loadMore = () => {
@@ -46,6 +54,9 @@ export const App = () => {
             tags,
           };
         });
+        if (images.length <= 0) {
+          setError('No pictures were found for this search');
+        }
 
         if (page === 1) {
           myGallery.maxPages = Math.ceil(totalHits / 12);
@@ -56,7 +67,7 @@ export const App = () => {
         setLoadMoreVisible(myGallery.ShowLoadMore());
         return true;
       } catch {
-        setError('No pictures were found for this search');
+        setError('reload Please');
         return false;
       } finally {
         setIsLoading(false);
@@ -70,6 +81,7 @@ export const App = () => {
     <div>
       <Searchbar onSubmit={searchImages} />
       {images && <ImageGallery images={images} />}
+      {error && <span className="error">{error}</span>}
       <Loader isLoading={isLoading} />
       {loadMoreVisible && <Button onClick={loadMore} />}
     </div>
